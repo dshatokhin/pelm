@@ -1,0 +1,8 @@
+*.tgz
+node_modules/
+pelm
+pelm.build.mjs
+.terraform/
+.terraform.lock.hcl
+*.tfstate*
+pelm-cluster.yaml
