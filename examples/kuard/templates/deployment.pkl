@@ -1,0 +1,66 @@
+
+import "@k8s/api/apps/v1/Deployment.pkl"
+import ".../pelm.pkl"
+
+manifest: Deployment = new {
+  metadata {
+    name = pelm.helpers.fullname
+    namespace = pelm.namespace
+    labels = pelm.helpers.labels
+  }
+  spec {
+    when (!pelm.values.autoscaling.enabled) {
+      replicas = pelm.values.replicaCount
+    }
+    selector {
+      matchLabels = pelm.helpers.selectorLabels
+    }
+    template {
+      metadata {
+        when (!pelm.values.podAnnotations.isEmpty) {
+          annotations = pelm.values.podAnnotations
+        }
+        labels {
+          ...pelm.helpers.labels
+          ...pelm.values.podLabels
+        }
+      }
+      spec {
+        when (!pelm.values.imagePullSecrets.isEmpty) {
+          imagePullSecrets = pelm.values.imagePullSecrets
+        }
+        serviceAccountName = pelm.helpers.serviceAccountName
+        securityContext = pelm.values.podSecurityContext
+        containers {
+          new {
+            name = pelm.jar.name
+            securityContext = pelm.values.securityContext
+            image = "\(pelm.values.image.repository):\(pelm.values.image.tag ?? pelm.jar.appVersion)"
+            imagePullPolicy = pelm.values.image.pullPolicy
+            command = new {"/kuard"}
+            args = new {
+              "--address"
+              ":\(pelm.values.service.containerPort)"}
+            ports {
+              new {
+                name = "http"
+                containerPort = pelm.values.service.containerPort
+                protocol = "TCP"
+              }
+            }
+            livenessProbe = pelm.values.livenessProbe
+            readinessProbe = pelm.values.readinessProbe
+            resources = pelm.values.resources
+            when (!pelm.values.volumeMounts.isEmpty) {
+              volumeMounts = pelm.values.volumeMounts
+            }
+          }
+        }
+        volumes = pelm.values.volumes
+        nodeSelector = pelm.values.nodeSelector
+        affinity = pelm.values.affinity
+        tolerations = pelm.values.tolerations
+      }
+    }
+  }
+}

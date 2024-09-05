@@ -1,0 +1,7 @@
+
+name = "kuard"
+description = "A Pelm jar for Kubernetes"
+
+version = "0.1.1"
+
+appVersion = "blue"

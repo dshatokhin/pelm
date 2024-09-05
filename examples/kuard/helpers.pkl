@@ -1,0 +1,53 @@
+
+module Helpers
+
+import "values.pkl" as valuesModule
+import "jar.pkl" as jarModule
+
+const releaseService: String = "pelm"
+
+releaseName: String = read("prop:name")
+
+values = valuesModule.values
+jar = jarModule
+
+name: String = (values.nameOverride ?? jar.name)
+  .take(63)
+  .dropLastWhile((it) -> it.endsWith("-"))
+
+fullname: String =
+  if (values.fullnameOverride != null)
+    values.fullnameOverride
+      .take(63)
+      .dropLastWhile((it) -> it.endsWith("-"))
+  else
+    if (releaseName.contains(values.nameOverride ?? jar.name))
+      releaseName
+        .take(63)
+        .dropLastWhile((it) -> it.endsWith("-"))
+    else
+      "\(releaseName)-\(name)"
+
+jarFullname: String = "\(jar.name)-\(jar.version)"
+  .replaceAll("+", "_")
+  .take(63)
+  .dropLastWhile((it) -> it.endsWith("-"))
+
+selectorLabels: Mapping<String, String> = new {
+  ["app.kubernetes.io/name"] = name
+  ["app.kubernetes.io/instance"] = releaseName
+}
+
+labels: Mapping<String, String> = (selectorLabels) {
+  ["pelm.sh/jar"] = jarFullname
+  when (!jar.appVersion.isEmpty) {
+    ["app.kubernetes.io/version"] = jar.appVersion
+  }
+  ["app.kubernetes.io/managed-by"] = releaseService
+}
+
+serviceAccountName: String =
+  if (values.serviceAccount.create)
+    values.serviceAccount.name ?? fullname
+  else
+    values.serviceAccount.name ?? "default"

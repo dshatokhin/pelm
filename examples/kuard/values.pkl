@@ -1,0 +1,207 @@
+
+module Values
+
+import "@k8s/api/core/v1/LocalObjectReference.pkl"
+import "@k8s/api/core/v1/SecurityContext.pkl"
+import "@k8s/api/core/v1/Probe.pkl"
+import "@k8s/api/core/v1/ResourceRequirements.pkl"
+import "@k8s/api/core/v1/PodSpec.pkl"
+import "@k8s/api/core/v1/VolumeMount.pkl"
+import "@k8s/api/core/v1/Volume.pkl"
+import "@k8s/api/core/v1/Toleration.pkl"
+import "@deepToTyped/deepToTyped.pkl"
+import "pkl:yaml"
+
+function mapMerge(defaults: Map, overrides: Map) =
+  defaults
+    .map((k, v) -> (
+      if (overrides.containsKey(k))
+        if (v is Object && !(v is Listing|List))
+          Pair(k, mapMerge(defaults[k].toMap(), overrides[k].toMap()))
+        else
+          Pair(k, overrides[k])
+      else
+        Pair(k, v)
+      )
+    ).toDynamic()
+
+local customValuesProp = read?("prop:values")
+local customValuesFile = read?("file:\(customValuesProp)")
+local customValues =
+  if (customValuesFile != null)
+    new yaml.Parser {}.parse(customValuesFile)
+  else
+    new Dynamic {}
+
+mergedValues = mapMerge(defaultValues.toMap(), customValues.toMap())
+values = deepToTyped.apply(Values, mergedValues)
+
+output {
+  renderer = new YamlRenderer {}
+  value = defaultValues
+}
+
+defaultValues = new Values {
+  replicaCount = 1
+
+  image = new {
+    repository = "gcr.io/kuar-demo/kuard-amd64"
+    pullPolicy = "IfNotPresent"
+    tag = null
+  }
+
+  imagePullSecrets = new {}
+
+  nameOverride = null
+  fullnameOverride = null
+
+  serviceAccount = new {
+    create = true
+    automount = true
+    annotations = new {}
+    name = null
+  }
+
+  podAnnotations = new {}
+  podLabels = new {}
+
+  podSecurityContext = new {}
+  securityContext = new {}
+
+  service = new {
+    type = "ClusterIP"
+    port = 80
+    containerPort = 8080
+  }
+
+  ingress = new {
+    enabled = false
+    className = null
+    annotations = new {}
+    hosts {
+      new {
+        host = "chart-example.local"
+        paths {
+          new {
+            path = "/"
+            pathType = "ImplementationSpecific"
+          }
+        }
+      }
+    }
+    tls = new {}
+  }
+
+  resources = new {}
+  livenessProbe = new {
+    httpGet {
+      path = "/healthy"
+      port = "http"
+    }
+  }
+
+  readinessProbe = new {
+    httpGet {
+      path = "/ready"
+      port = "http"
+    }
+  }
+
+  autoscaling = new {
+    enabled = false
+    minReplicas = 1
+    maxReplicas = 100
+    targetCPUUtilizationPercentage = 80
+    targetMemoryUtilizationPercentage = 80
+  }
+
+  volumes = new {}
+  volumeMounts = new {}
+
+  nodeSelector = new {}
+  tolerations = new {}
+  affinity = new {}
+}
+
+class Values {
+  replicaCount: Int?
+  image: Image?
+  imagePullSecrets: Listing<LocalObjectReference>
+
+  nameOverride: String?
+  fullnameOverride: String?
+
+  serviceAccount: ServiceAccount?
+
+  podAnnotations: Mapping<String, String>
+  podLabels: Mapping<String, String>
+
+  podSecurityContext: PodSpec.PodSecurityContext
+  securityContext: SecurityContext
+
+  service: Service?
+
+  ingress: Ingress?
+
+  resources: ResourceRequirements
+  livenessProbe: Probe?
+  readinessProbe: Probe?
+  autoscaling: Autoscaling?
+
+  volumes: Listing<Volume>
+  volumeMounts: Listing<VolumeMount>
+
+  nodeSelector: Mapping<String, String>
+  tolerations: Listing<Toleration>
+  affinity: PodSpec.Affinity
+}
+
+class Image {
+  repository: String
+  pullPolicy: String
+  tag: String?
+}
+
+class ServiceAccount {
+  create: Boolean
+  automount: Boolean
+  annotations: Mapping<String, String>
+  name: String?
+}
+
+class Autoscaling {
+  enabled: Boolean
+  minReplicas: Int?
+  maxReplicas: Int?
+  targetCPUUtilizationPercentage: Int?
+  targetMemoryUtilizationPercentage: Int?
+}
+
+class Service {
+  type: String
+  port: PortNumber
+  containerPort: Int
+}
+
+class Ingress {
+  enabled: Boolean
+  className: String?
+  annotations: Mapping<String, String>
+  hosts: Listing<Host>
+  tls: Listing<TlsCertificate>
+}
+
+class Host {
+  host: String
+  paths: Listing<Path>
+}
+
+class Path {
+  path: String
+  pathType: String
+}
+
+class TlsCertificate {
+  secretName: String
+  hosts: Listing<String>
+}

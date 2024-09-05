@@ -1,0 +1,21 @@
+
+amends "pkl:Project"
+
+import "jar.pkl"
+
+package {
+  name = jar.name
+  baseUri = "package://example.com/\(jar.name)"
+  version = jar.version
+  packageZipUrl = "https://example.com/\(jar.name)/\(jar.name)@\(jar.version).zip"
+  description = jar.description
+}
+
+dependencies {
+  ["k8s"] {
+    uri = "package://pkg.pkl-lang.org/pkl-k8s/k8s@1.1.0"
+  }
+  ["deepToTyped"] {
+    uri = "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.deepToTyped@1.0.2"
+  }
+}

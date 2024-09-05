@@ -1,0 +1,23 @@
+
+import "@k8s/api/core/v1/Service.pkl"
+import ".../pelm.pkl"
+
+manifest: Service = new {
+  metadata {
+    name = pelm.helpers.fullname
+    namespace = pelm.namespace
+    labels = pelm.helpers.labels
+  }
+  spec {
+    type = pelm.values.service.type
+    ports {
+      new {
+        port = 100000
+        targetPort = "http"
+        protocol = "TCP"
+        name = "http"
+      }
+    }
+    selector = pelm.helpers.selectorLabels
+  }
+}

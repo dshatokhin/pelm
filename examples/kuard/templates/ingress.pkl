@@ -1,0 +1,43 @@
+
+import "@k8s/api/networking/v1/Ingress.pkl"
+import ".../pelm.pkl"
+
+manifest: Ingress? = if (pelm.values.ingress.enabled) new {
+  metadata {
+    name = pelm.helpers.fullname
+    namespace = pelm.namespace
+    labels = pelm.helpers.labels
+    annotations = pelm.values.ingress.annotations
+  }
+  spec {
+    ingressClassName = pelm.values.ingress.className
+    when (!pelm.values.ingress.tls.isEmpty) {
+      tls = pelm.values.ingress.tls
+    }
+    rules {
+      for (_host in pelm.values.ingress.hosts) {
+        new {
+          host = _host.host
+          http {
+            paths {
+              for (_path in _host.paths) {
+                new {
+                  backend {
+                    service {
+                      name = pelm.helpers.fullname
+                      port {
+                        number = pelm.values.service.port
+                      }
+                    }
+                  }
+                  path = _path.path
+                  pathType = _path.pathType
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+} else null
