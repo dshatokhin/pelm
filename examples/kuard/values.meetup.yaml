@@ -1,0 +1,4 @@
+service:
+  type: LoadBalancer
+  port: 80
+  containerPort: 9000

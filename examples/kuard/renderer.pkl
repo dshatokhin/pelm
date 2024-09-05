@@ -1,0 +1,18 @@
+
+module Renderer
+
+import "@k8s/K8sResource.pkl"
+import* "templates/[!_]*.pkl" as templates
+
+local resources: Listing<K8sResource> = new {
+  for (_item in templates) {
+    when (_item.manifest != null) {
+      _item.manifest
+    }
+  }
+}
+
+output {
+  renderer = (K8sResource.output.renderer as YamlRenderer) { isStream = true }
+  value = resources
+}

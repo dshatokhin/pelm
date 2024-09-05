@@ -1,0 +1,12 @@
+
+module Pelm
+
+import "values.pkl" as valuesModule
+import "helpers.pkl" as helpersModule
+import "jar.pkl" as jarModule
+
+namespace: String = read?("prop:namespace") ?? "default"
+
+values = valuesModule.values
+helpers = helpersModule
+jar = jarModule
