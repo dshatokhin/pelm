@@ -5,4 +5,5 @@ pelm.build.mjs
 .terraform/
 .terraform.lock.hcl
 *.tfstate*
+*.tf.json
 pelm-cluster.yaml

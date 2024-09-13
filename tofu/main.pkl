@@ -1,0 +1,93 @@
+local defaults {
+  prefix = read?("prop:prefix") ?? "demo"
+  zone = read?("prop:zone") ?? "fi-hel1"
+  plan = read?("prop:plan") ?? "development"
+
+  version = read?("prop:version") ?? "1.28"
+
+  nodes {
+    count = read?("prop:nodesCount")?.toInt() ?? 1
+    name = read?("prop:nodesName") ?? "medium"
+    plan = read?("prop:nodesPlan") ?? "2xCPU-4GB"
+  }
+}
+
+mainTf {
+  terraform {
+    required_providers {
+      upcloud {
+        source = "UpCloudLtd/upcloud"
+        version = "~> 5.4.0"
+      }
+    }
+  }
+
+  provider {
+    upcloud = new {}
+  }
+
+  resource {
+    upcloud_network {
+      [defaults.prefix] {
+        name = "\(defaults.prefix)-network"
+        zone = defaults.zone
+        ip_network {
+          address = "172.17.1.0/24"
+          dhcp = true
+          family = "IPv4"
+        }
+
+        lifecycle {
+          ignore_changes = new { "router" }
+        }
+      }
+    }
+
+    upcloud_kubernetes_cluster {
+      [defaults.prefix] {
+        name = defaults.prefix
+        control_plane_ip_filter = new { "0.0.0.0/0" }
+        network = "${upcloud_network.\(defaults.prefix).id}"
+        zone = defaults.zone
+        plan = defaults.plan
+        version = defaults.version
+      }
+    }
+    upcloud_kubernetes_node_group {
+      [defaults.prefix] {
+        cluster = "${upcloud_kubernetes_cluster.\(defaults.prefix).id}"
+        node_count = defaults.nodes.count
+        name = defaults.nodes.count
+        plan = defaults.nodes.plan
+
+        labels {
+          managedBy = "tofu"
+        }
+      }
+    }
+  }
+
+  data {
+    upcloud_kubernetes_cluster {
+      pelm {
+        id = "${upcloud_kubernetes_cluster.\(defaults.prefix).id}"
+      }
+    }
+  }
+
+  output {
+    kubeconfig {
+      value = "${data.upcloud_kubernetes_cluster.\(defaults.prefix).kubeconfig}"
+      sensitive = true
+    }
+  }
+}
+
+output {
+  files {
+    ["main.tf.json"] {
+      value = mainTf
+      renderer = new JsonRenderer {}
+    }
+  }
+}
