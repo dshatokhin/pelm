@@ -16,4 +16,19 @@ compile)
 install)
   cp ./pelm "$HOME/.local/bin/pelm"
   ;;
+tofu)
+  tofu_cmd=${2:-"plan"}
+  tofu_dir=${3:-"tofu"}
+
+  tofu_prefix="pelm"
+
+  if [ ! -d "$tofu_dir/.terraform" ]; then
+    echo " => Initializing tofu"
+    tofu -chdir="$tofu_dir" init
+  fi
+
+  pkl eval -m "$tofu_dir/" "$tofu_dir/main.pkl" -p prefix="$tofu_prefix"
+  tofu -chdir="$tofu_dir" "$tofu_cmd"
+  tofu -chdir="$tofu_dir" output -raw kubeconfig >"${tofu_prefix}-cluster.yaml"
+  ;;
 esac
