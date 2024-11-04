@@ -1,0 +1,19 @@
+import "locals.pkl"
+
+resource {
+  upcloud_network {
+    ["\(locals.prefix)_network"] {
+      name = "\(locals.prefix)-network"
+      zone = locals.zone
+      ip_network {
+        address = "172.17.1.0/24"
+        dhcp    = true
+        family  = "IPv4"
+      }
+
+      lifecycle {
+        ignore_changes = new { "router" }
+      }
+    }
+  }
+}

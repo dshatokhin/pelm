@@ -1,0 +1,9 @@
+import "locals.pkl"
+
+data {
+  upcloud_kubernetes_cluster {
+    pelm {
+      id = "${upcloud_kubernetes_cluster.\(locals.prefix)_cluster.id}"
+    }
+  }
+}

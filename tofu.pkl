@@ -1,0 +1,16 @@
+import* "resources/*.tf.pkl" as resources
+
+fileNameRegex = Regex(#"(resources/|.pkl)"#)
+
+output {
+  files {
+    for (_key, _value in resources) {
+      [_key.replaceAll(fileNameRegex, "") + ".json"] {
+        value =
+          if (_key == "resources/output.tf.pkl") _value.tofuOutput
+          else _value
+        renderer = new JsonRenderer {}
+      }
+    }
+  }
+}
