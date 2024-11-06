@@ -1,8 +1,10 @@
-#!/usr/bin/env zx
+import 'npm:zx/globals'
+import minimist from 'npm:minimist'
+import process from 'npm:process'
+import fs from 'npm:fs-extra'
+import os from 'npm:os'
 
-const argvOffset = 3
-
-const flags = minimist(process.argv.slice(argvOffset), {
+const flags = minimist(process.argv.slice(2), {
   boolean: [
     'help',
     'create-namespace'

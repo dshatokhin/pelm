@@ -1,0 +1,11 @@
+prefix = read?("prop:prefix") ?? "pelm"
+zone   = read?("prop:zone")   ?? "fi-hel1"
+plan   = read?("prop:plan")   ?? "development"
+
+version = read?("prop:version") ?? "1.29"
+
+nodes {
+  count = read?("prop:nodesCount")?.toInt() ?? 1
+  name  = read?("prop:nodesName")           ?? "main"
+  plan  = read?("prop:nodesPlan")           ?? "DEV-2xCPU-4GB"
+}

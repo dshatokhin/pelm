@@ -1,0 +1,14 @@
+import "locals.pkl"
+
+terraform {
+  required_providers {
+    upcloud {
+      source  = "UpCloudLtd/upcloud"
+      version = "~> 5.14.0"
+    }
+  }
+}
+
+provider {
+  upcloud = new {}
+}

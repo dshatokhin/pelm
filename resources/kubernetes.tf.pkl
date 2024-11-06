@@ -1,0 +1,22 @@
+import "locals.pkl"
+
+resource {
+  upcloud_kubernetes_cluster {
+    ["\(locals.prefix)_cluster"] {
+      name                    = locals.prefix
+      control_plane_ip_filter = new { "0.0.0.0/0" }
+      network                 = "${upcloud_network.\(locals.prefix)_network.id}"
+      zone                    = locals.zone
+      plan                    = locals.plan
+      version                 = locals.version
+    }
+  }
+  upcloud_kubernetes_node_group {
+    ["\(locals.prefix)_node_group"] {
+      cluster    = "${upcloud_kubernetes_cluster.\(locals.prefix)_cluster.id}"
+      node_count = locals.nodes.count
+      name       = locals.nodes.count
+      plan       = locals.nodes.plan
+    }
+  }
+}

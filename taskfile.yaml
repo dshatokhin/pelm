@@ -1,0 +1,37 @@
+version: '3'
+
+vars:
+  TOFU_DIR: tofu
+  PELM_BINARY_FILE: bin/pelm
+  KUBECONFIG_FILE: '{{.HOME}}/.kube/pelm-cluster.yaml'
+
+tasks:
+  run:
+    desc: Run pelm.js
+    cmds:
+    - deno run --allow-all pelm.js {{.CLI_ARGS}}
+
+  build:
+    desc: Build pelm binary
+    cmds:
+    - deno compile --output {{.PELM_BINARY_FILE}} --allow-all pelm.js {{.CLI_ARGS}}
+
+  pkl:
+    desc: Build tf.json files
+    cmds:
+    - pkl eval -m {{.TOFU_DIR}} tofu.pkl {{.CLI_ARGS}}
+
+  tofu-*:
+    desc: Tofu related commands
+    vars:
+      COMMAND: '{{index .MATCH 0 | default "plan"}}'
+    cmds:
+    - task: pkl
+      vars:
+        CLI_ARGS: ""
+    - tofu -chdir={{.TOFU_DIR}} {{.COMMAND}} {{.CLI_ARGS}}
+
+  kubeconfig:
+    desc: Put kubeconfig file to {{.KUBECONFIG_FILE}}
+    cmds:
+    - tofu -chdir={{.TOFU_DIR}} output -raw kubeconfig > {{.KUBECONFIG_FILE}}

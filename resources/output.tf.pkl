@@ -1,0 +1,10 @@
+import "locals.pkl"
+
+tofuOutput {
+  output {
+    kubeconfig {
+      value = "${data.upcloud_kubernetes_cluster.\(locals.prefix).kubeconfig}"
+      sensitive = true
+    }
+  }
+}
